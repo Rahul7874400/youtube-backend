@@ -1,5 +1,15 @@
 import {Router} from "express"
-import { refreshAccessToken , userLogIn, userLogout, userRegister } from "../controllers/user.controller.js"
+import { 
+    changeCurrentPassword, 
+    getCurrentUser, 
+    refreshAccessToken , 
+    updateAccountDetail,
+     updateAvatar, 
+     updateCoverImage, 
+     userLogIn, 
+     userLogout, 
+     userRegister 
+    } from "../controllers/user.controller.js"
 import { upload } from "../middleswares/multer.middlesware.js"
 import {verifyjwt} from "../middleswares/auth.middlesware.js"
 
@@ -9,11 +19,11 @@ const router = Router()
 router.route("/register").post(
     upload.fields([
         {
-            name : "avatar",
+            name : "avatar", // frontend feild must be avatar
             maxCount : 1
         },
         {
-           name:"coverImage",
+           name:"coverImage",  // frontend feild must be coverImage
            maxCount : 1 
         }
     ]),
@@ -24,6 +34,11 @@ router.route("/register").post(
     // secure
     router.route("/logout").post(verifyjwt,userLogout)
     router.route("/refresh-token").post(refreshAccessToken )
+    router.route("/change-password").post(verifyjwt,changeCurrentPassword)
+    router.route("/current-user").post(verifyjwt,getCurrentUser)
+    router.route("/update-account").patch(verifyjwt,updateAccountDetail)
+    router.route("/update-avatar").patch(verifyjwt,upload.single("avatar"),updateAvatar)
+    router.route("/update-coverImage").patch(verifyjwt,upload.single("coverImage"),updateCoverImage)
 
 
 export default router
