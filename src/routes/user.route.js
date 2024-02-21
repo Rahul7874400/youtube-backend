@@ -43,6 +43,7 @@ router.route("/register").post(
     router.route("/update-coverImage").patch(verifyjwt,upload.single("coverImage"),updateCoverImage)
     router.route("/c/:userName").get(verifyjwt,getUsercChannelProfile)
     router.route("/watch-history").get(verifyjwt,watchHistory)
+    
 
 
 export default router
