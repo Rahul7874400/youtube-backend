@@ -4,6 +4,7 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 import {User} from "../models/users.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary_service.js"
 import jwt from "jsonwebtoken"
+import mongoose from "mongoose"
 
 const generateAccessTokenAndRefreshToken = async (userId) =>{
     try {
@@ -448,6 +449,67 @@ const getUsercChannelProfile = asyncHandler( async(req,res)=>{
     )
 } )
 
+const watchHistory = asyncHandler( async(req,res)=>{
+
+    const user = await User.aggregate([
+        {
+            $match : {
+                _id : new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        {
+            $lookup : {
+                from : "videos",
+                localField : "watchHistory",
+                foreignField : "_id",
+                as : "watchHistory",
+                pipeline : [
+                    {
+                        $lookup : {
+                            from : "users",
+                            localField : "owner",
+                            foreignField : "_id",
+                            as : "owner",
+                            pipeline : [
+                                {
+                                    $project : {
+                                        fullName : 1,
+                                        userName : 1,
+                                        avatar : 1
+
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields : {
+                            owner : {
+                                $first : "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    if(!user?.length){
+        throw new apiError(404,"User does not exist")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            201,
+            user[0].watchHistory,
+            "User watch history"
+        )
+    )
+
+} )
+
 export { userRegister, 
          userLogIn,
          userLogout,
@@ -457,5 +519,6 @@ export { userRegister,
          updateAccountDetail,
          updateAvatar,
          updateCoverImage,
-         getUsercChannelProfile
+         getUsercChannelProfile,
+         watchHistory
         }

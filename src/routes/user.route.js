@@ -9,7 +9,8 @@ import {
      updateCoverImage, 
      userLogIn, 
      userLogout, 
-     userRegister 
+     userRegister, 
+     watchHistory
     } from "../controllers/user.controller.js"
 import { upload } from "../middleswares/multer.middlesware.js"
 import {verifyjwt} from "../middleswares/auth.middlesware.js"
@@ -41,6 +42,7 @@ router.route("/register").post(
     router.route("/update-avatar").patch(verifyjwt,upload.single("avatar"),updateAvatar)
     router.route("/update-coverImage").patch(verifyjwt,upload.single("coverImage"),updateCoverImage)
     router.route("/c/:userName").get(verifyjwt,getUsercChannelProfile)
+    router.route("/watch-history").get(verifyjwt,watchHistory)
 
 
 export default router
