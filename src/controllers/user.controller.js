@@ -161,8 +161,8 @@ const userLogout = asyncHandler ( async (req,res) =>{
     User.findByIdAndUpdate(
         req.user?._id,
         {
-            $set : {
-                refreshToken : undefined /// remove this field from db
+            $unset : {
+                refreshToken : 1 /// remove this field from db
             }
         },
         {
@@ -229,8 +229,233 @@ const refreshAccessToken  = asyncHandler( async(req,res)=>{
 
 } )
 
+const changeCurrentPassword = asyncHandler( async(req,res) =>{
+    const {oldPassword,newPassword} = req.body
+
+    const user = await User.findById(req.user?._id)
+
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+    if(!isPasswordCorrect){
+        throw new apiError(404,"Old password is not correct")
+    }
+
+    user.password = newPassword
+    await user.save({validateBeforeSave : true})
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+        201,
+        {},
+        "Password changed successfully"
+        )
+    )
+
+} )
+
+const getCurrentUser = asyncHandler( async(req,res)=>{
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+        200,
+        req.user,
+        "Get current user successfully"
+        )
+    )
+} )
+
+const updateAccountDetail = asyncHandler( async(req,res)=>{
+    const {fullName,email} = req.body
+
+    if(!fullName || !email){
+        throw new apiError(404,"All field are required")
+    }
+
+   const user =  await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+        $set : {
+            fullName : fullName,
+            email : email
+        },
+    },
+    {
+        new : true
+    }
+   ).select("-password")
+
+   return res
+   .status(200)
+   .json(
+    new ApiResponse(
+        200,
+        user,
+        "Account get updated"
+    )
+   )
+
+} )
+
+const updateAvatar = asyncHandler( async(req,res)=>{
+    const avatarLocalPath = req.file?.path
+
+    if(!avatarLocalPath){
+        return apiError(404,"Missing avatar image")
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+    if(!avatar.url){
+        throw apiError(404,"Some thing went worng while uploading avatar in cloud")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set : {
+                avatar : avatar.url
+            }
+        },
+        {new : true}
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            201,
+            user,
+            "Avatar image updated sucessfully"
+        )
+    )
+} )
+
+
+const updateCoverImage = asyncHandler( async(req,res)=>{
+    const coverImageLocalPath = req.file?.path
+
+    if(!coverImageLocalPath){
+        throw new apiError(404,"Missing cover Image")
+    }
+
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+
+    if(!coverImage){
+        throw new apiError(404,"something went worng while uploading cover Image")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set : {
+                coverImage : coverImage.url
+            }
+        },
+        {
+            new : true
+        }
+    ).select("-password")
+
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            201,
+            user,
+            "Cover Image updated sucessfully"
+        )
+    )
+} )
+
+
+const getUsercChannelProfile = asyncHandler( async(req,res)=>{
+    const {userName} = req.params
+
+    if(!userName?.trim()){
+        throw new apiError(404,"username is missing")
+    }
+
+    const channel = await User.aggregate([
+        {
+            $match : {
+                userName : userName
+            }
+        },
+        {
+            $lookup : {
+                from : "subscriptions",
+                localField : "_id",
+                foreignField : "channel",
+                as : "subscribers"
+            }
+        },
+        {
+            $lookup : {
+                from : "subscriptions",
+                localField : "_id",
+                foreignField : "subcriber",
+                as : "subscribedTo"
+            }
+        },
+        {
+            $addFields : {
+                subscriberCount : {
+                    $size : "$subscribers"
+                },
+                channelSubscribedToCount : {
+                    $size : "$subscribedTo"
+                },
+                isSubscribed : {
+                    $cond : {
+                        if : {in : [req.user?._id,"$subscribers.subcriber"]},
+                        then : true,
+                        else : false
+                    }
+                }
+            }
+        },
+        {
+            $project : {
+                fullName : 1,
+                userName : 1,
+                email : 1,
+                subscriberCount : 1,
+                channelSubscribedToCount : 1,
+                isSubscribed : 1,
+                avatar : 1,
+                coverImage : 1
+            }
+        }
+    ])
+
+    if(!channel?.length){
+        throw new apiError(404,"Channel does not esxit")
+    }
+
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            201,
+            channel[0],
+            "User profile is fetched successfully"
+        )
+    )
+} )
+
 export { userRegister, 
          userLogIn,
          userLogout,
-         refreshAccessToken
+         refreshAccessToken,
+         changeCurrentPassword,
+         getCurrentUser,
+         updateAccountDetail,
+         updateAvatar,
+         updateCoverImage,
+         getUsercChannelProfile
         }

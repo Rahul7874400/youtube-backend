@@ -2,6 +2,7 @@ import {Router} from "express"
 import { 
     changeCurrentPassword, 
     getCurrentUser, 
+    getUsercChannelProfile, 
     refreshAccessToken , 
     updateAccountDetail,
      updateAvatar, 
@@ -39,6 +40,7 @@ router.route("/register").post(
     router.route("/update-account").patch(verifyjwt,updateAccountDetail)
     router.route("/update-avatar").patch(verifyjwt,upload.single("avatar"),updateAvatar)
     router.route("/update-coverImage").patch(verifyjwt,upload.single("coverImage"),updateCoverImage)
+    router.route("/c/:userName").get(verifyjwt,getUsercChannelProfile)
 
 
 export default router
