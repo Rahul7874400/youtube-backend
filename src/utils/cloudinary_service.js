@@ -31,4 +31,24 @@ const uploadOnCloudinary  = async function (localFilePath){
 
 }
 
-export { uploadOnCloudinary }
+const deleteFromCloudinary = async function (localFilePath){
+    try {
+        if(!localFilePath){
+            console.log("localfile is empty")
+            return null
+        }
+        const respose = await cloudinary.uploader.destroy(localFilePath,{
+            resource_type : "auto"
+        })
+
+        return respose
+        
+    } catch (error) {
+        return null
+    }
+}
+
+export { 
+    uploadOnCloudinary ,
+    deleteFromCloudinary
+       }
