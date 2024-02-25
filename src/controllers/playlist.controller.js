@@ -85,7 +85,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     const {playlistId} = req.params
     //TODO: get playlist by id
 
-    const playlist = await findById(playlistId)
+    const playlist = await Playlist.findById(playlistId)
 
     if(!playlist){
         throw new apiError(400,"playlist does not exist")
@@ -142,6 +142,8 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
     .json(
         new ApiResponse(
             201,
+            addvideo,
+            "Video added successfully"
 
         )
     )
