@@ -159,7 +159,7 @@ const userLogIn = asyncHandler( async (req,res)=>{
 } )
 
 const userLogout = asyncHandler ( async (req,res) =>{
-    User.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
         req.user?._id,
         {
             $unset : {

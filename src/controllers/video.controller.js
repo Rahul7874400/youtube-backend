@@ -4,10 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary_service.js"
 import { Video } from "../models/videos.model.js" 
 
-const getAllVideo = asyncHandler( async(req,res)=>{
-    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
-    //TODO: get all videos based on query, sort, pagination
-} )
+
 
 
 const publishVideo = asyncHandler( async(req,res) =>{
@@ -101,7 +98,7 @@ const updateVideo = asyncHandler( async(req,res)=>{
     const preVideoFilesLocalPath = video.videoFiles
     const preThumbnailLocalPath = video.thumbnail
 
-    if(!preThumbnailLocalPath){
+    if(!preVideoFilesLocalPath){
         throw apiError(404,"previous video does not exist")
     }
     if(!preThumbnailLocalPath){
